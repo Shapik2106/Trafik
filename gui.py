@@ -2,100 +2,95 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import traffic
+from graphs import open_graph_window
 
-def calculate():
-    try:
-        N = float(ent_users.get())
-        n = float(ent_sessions.get())
-        t = float(ent_duration.get())
-        T = float(ent_day.get())
-        m = int(ent_channels.get())
-        q = float(ent_recall.get()) / 100
+def start_gui():
+    root = tk.Tk()
+    root.title("Розрахунок характеристик телетрафіку")
+    root.geometry("720x480")
+    root.resizable(False, False)
 
-        A, A1, Pc, Pb, Pa = traffic.calculate_traffic(N, n, t, T, m, q)
+    style = ttk.Style()
+    style.theme_use("clam")
 
-        lbl_A_val.config(text=f"{A:.3f}")
-        lbl_A1_val.config(text=f"{A1:.3f}")
-        lbl_Pc_val.config(text=f"{Pc:.3f}")
-        lbl_Pb_val.config(text=f"{Pb:.3f}")
-        lbl_Pa_val.config(text=f"{Pa:.3f}")
+    def calculate():
+        try:
+            N = float(ent_users.get())
+            n = float(ent_sessions.get())
+            t = float(ent_duration.get())
+            T = float(ent_day.get())
+            m = int(ent_channels.get())
+            q = float(ent_recall.get()) / 100
 
-    except ValueError:
-        messagebox.showerror("Помилка", "Будь ласка, введіть коректні числові дані")
+            A, A1, Pc, Pb, Pa = traffic.calculate_traffic(N, n, t, T, m, q)
 
-# ====== ВІКНО ======
-root = tk.Tk()
-root.title("Розрахунок характеристик телетрафіку")
-root.geometry("700x480")
-root.resizable(False, False)
+            lbl_A.config(text=f"{A:.3f}")
+            lbl_A1.config(text=f"{A1:.3f}")
+            lbl_Pc.config(text=f"{Pc:.3f}")
+            lbl_Pb.config(text=f"{Pb:.3f}")
+            lbl_Pa.config(text=f"{Pa:.3f}")
 
-style = ttk.Style()
-style.theme_use("clam")
-style.configure("TLabel", font=("Segoe UI", 10))
-style.configure("Header.TLabel", font=("Segoe UI", 14, "bold"))
-style.configure("TButton", font=("Segoe UI", 10))
+        except ValueError:
+            messagebox.showerror("Помилка", "Введіть коректні числові значення")
 
-# ====== ЗАГОЛОВОК ======
-ttk.Label(root, text="Розрахунок характеристик телетрафіку",
-          style="Header.TLabel").pack(pady=10)
+    # ---- интерфейс (без изменений по сути) ----
+    main = ttk.Frame(root, padding=10)
+    main.pack(fill="both", expand=True)
 
-main_frame = ttk.Frame(root, padding=10)
-main_frame.pack(fill="both", expand=True)
+    input_f = ttk.LabelFrame(main, text="Вхідні параметри")
+    input_f.grid(row=0, column=0, padx=10, pady=10)
 
-# ====== ВХІДНІ ДАНІ ======
-input_frame = ttk.LabelFrame(main_frame, text="Вхідні параметри", padding=10)
-input_frame.grid(row=0, column=0, padx=10, pady=10, sticky="n")
+    result_f = ttk.LabelFrame(main, text="Результати")
+    result_f.grid(row=0, column=1, padx=10, pady=10)
 
-labels = [
-    "Кількість абонентів",
-    "Кількість сеансів зв'язку",
-    "Тривалість сеансу (с)",
-    "Тривалість робочого дня (хв)",
-    "Кількість каналів",
-    'Ймовірність "передзвону" (%)'
-]
+    labels = [
+        "Кількість абонентів",
+        "Кількість сеансів",
+        "Тривалість сеансу (с)",
+        "Тривалість дня (хв)",
+        "Кількість каналів",
+        "Ймовірність передзвону (%)"
+    ]
 
-entries = []
+    defaults = ["1000", "20", "20", "1440", "5", "10"]
+    entries = []
 
-for i, text in enumerate(labels):
-    ttk.Label(input_frame, text=text).grid(row=i, column=0, sticky="w", pady=4)
-    e = ttk.Entry(input_frame, width=20)
-    e.grid(row=i, column=1, pady=4)
-    entries.append(e)
+    for i, text in enumerate(labels):
+        ttk.Label(input_f, text=text).grid(row=i, column=0, sticky="w", pady=3)
+        e = ttk.Entry(input_f, width=20)
+        e.grid(row=i, column=1, pady=3)
+        e.insert(0, defaults[i])
+        entries.append(e)
 
-(ent_users,
- ent_sessions,
- ent_duration,
- ent_day,
- ent_channels,
- ent_recall) = entries
+    (ent_users, ent_sessions, ent_duration,
+     ent_day, ent_channels, ent_recall) = entries
 
-# значення за замовчуванням
-defaults = ["1000", "20", "20", "1440", "5", "10"]
-for e, v in zip(entries, defaults):
-    e.insert(0, v)
+    def r(row, txt):
+        ttk.Label(result_f, text=txt).grid(row=row, column=0, sticky="w")
+        lbl = ttk.Label(result_f, text="—", width=10)
+        lbl.grid(row=row, column=1)
+        return lbl
 
-# ====== РЕЗУЛЬТАТИ ======
-result_frame = ttk.LabelFrame(main_frame, text="Результати розрахунку", padding=10)
-result_frame.grid(row=0, column=1, padx=10, pady=10, sticky="n")
+    lbl_A  = r(0, "Трафік A")
+    lbl_A1 = r(1, "Трафік A₁")
+    lbl_Pc = r(2, "Pc")
+    lbl_Pb = r(3, "Pb")
+    lbl_Pa = r(4, "Pa")
 
-def res_row(row, text):
-    ttk.Label(result_frame, text=text).grid(row=row, column=0, sticky="w", pady=4)
-    lbl = ttk.Label(result_frame, text="—", width=12)
-    lbl.grid(row=row, column=1, pady=4)
-    return lbl
+    btns = ttk.Frame(root)
+    btns.pack(pady=10)
 
-lbl_A_val  = res_row(0, "Трафік багатоканальної системи A")
-lbl_A1_val = res_row(1, "Трафік на канал A₁")
-lbl_Pc_val = res_row(2, "Ймовірність затримки Pc")
-lbl_Pb_val = res_row(3, "Ймовірність відмови Pb")
-lbl_Pa_val = res_row(4, "Ймовірність відмови Pa")
+    ttk.Button(btns, text="Обчислити", command=calculate).grid(row=0, column=0, padx=10)
+    ttk.Button(
+        btns,
+        text="Графіки",
+        command=lambda: open_graph_window(
+            ent_users.get(), ent_sessions.get(),
+            ent_duration.get(), ent_day.get(),
+            ent_channels.get(), ent_recall.get()
+        )
+    ).grid(row=0, column=1, padx=10)
 
-# ====== КНОПКИ ======
-btn_frame = ttk.Frame(root)
-btn_frame.pack(pady=10)
+    ttk.Button(btns, text="Вихід", command=root.destroy).grid(row=0, column=2, padx=10)
 
-ttk.Button(btn_frame, text="Обчислити", width=20, command=calculate).grid(row=0, column=0, padx=10)
-ttk.Button(btn_frame, text="Вихід", width=20, command=root.destroy).grid(row=0, column=1, padx=10)
-
-root.mainloop()
+    root.mainloop()

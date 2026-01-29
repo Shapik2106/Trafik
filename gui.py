@@ -33,7 +33,6 @@ def start_gui():
         except ValueError:
             messagebox.showerror("Помилка", "Введіть коректні числові значення")
 
-    # ---- интерфейс (без изменений по сути) ----
     main = ttk.Frame(root, padding=10)
     main.pack(fill="both", expand=True)
 
